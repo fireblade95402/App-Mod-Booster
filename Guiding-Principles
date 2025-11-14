@@ -1,0 +1,3 @@
+Because this repo is meant to support a workshop to stand up a POC of a modern app quickly and not intended for Production (without the PRODUCTION_CONSIDERATIONS applying from the docs)
+there is a guiding principle to use mechanics to deploy to azure that dont need excessive set up in Azure portal or GitHub action configuration. For example cloning the repo to desktop and deploying things via one line in terminal
+to leverage Azure CLI login etc will likely be easier than creating secrets and identities across portals/actions.
