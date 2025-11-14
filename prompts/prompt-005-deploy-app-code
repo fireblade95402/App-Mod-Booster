@@ -1,1 +1,8 @@
+create a zip file for the app code so that it can be deployed to azure in the following manner:
 
+az webapp deploy \
+  --resource-group MyRG \
+  --name MyWebApp \
+  --src-path ./app.zip
+
+Also add the correct terminal command to any deployment scripts you are creating or have created to deploy it
