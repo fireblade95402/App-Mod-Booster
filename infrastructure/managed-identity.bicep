@@ -8,6 +8,9 @@ param location string = resourceGroup().location
 param uniqueSuffix string
 
 // Create timestamp-based name component
+// Note: Per prompt-017 requirements, managed identity uses timestamp for uniqueness.
+// This creates a new identity per deployment which is intentional for demo purposes.
+// For production, consider using only uniqueSuffix to reuse the same identity.
 var timestamp = utcNow('ddHHmm')
 var managedIdentityName = 'mid-expensemgmt-${timestamp}-${uniqueSuffix}'
 

@@ -367,7 +367,11 @@ BEGIN
     SET NOCOUNT ON;
     
     -- Hard delete for demo purposes
-    -- In production, consider soft delete by updating a IsDeleted flag
+    -- PRODUCTION NOTE: Consider implementing soft delete instead:
+    -- 1. Add IsDeleted BIT column to Expenses table
+    -- 2. UPDATE Expenses SET IsDeleted = 1, DeletedAt = SYSUTCDATETIME() WHERE ExpenseId = @ExpenseId
+    -- 3. Add WHERE IsDeleted = 0 filter to all SELECT procedures
+    -- This maintains data integrity and audit trails for compliance
     DELETE FROM dbo.Expenses
     WHERE ExpenseId = @ExpenseId;
     

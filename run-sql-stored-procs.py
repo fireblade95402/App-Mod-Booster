@@ -7,6 +7,8 @@ import struct
 from azure.identity import AzureCliCredential
 
 # Database connection settings - will be updated by deploy script
+# IMPORTANT: These placeholder values are replaced during deployment by deploy.sh or deploy-with-chat.sh
+# Do not use these example values in production!
 SERVER = "sql-expensemgmt-example.database.windows.net"
 DATABASE = "Northwind"
 SQL_SCRIPT_FILE = "stored-procedures.sql"
