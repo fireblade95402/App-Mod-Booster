@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Management AI Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 40px);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .back-link {
+            display: inline-block;
+            color: white;
+            text-decoration: none;
+            margin-bottom: 10px;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .back-link:hover {
+            opacity: 1;
+        }
+
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            word-wrap: break-word;
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .message.assistant .message-content {
+            background: white;
+            color: #333;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .message.system .message-content {
+            background: #fff3cd;
+            color: #856404;
+            max-width: 100%;
+            border-left: 4px solid #ffc107;
+        }
+
+        .input-container {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        #userInput {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        #userInput:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        #sendButton {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: opacity 0.3s ease;
+        }
+
+        #sendButton:hover:not(:disabled) {
+            opacity: 0.9;
+        }
+
+        #sendButton:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: none;
+            padding: 12px 16px;
+            background: white;
+            border-radius: 12px;
+            color: #666;
+            font-style: italic;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .loading.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="/Index" class="back-link">← Back to Home</a>
+            <h1>💬 AI Assistant for Expense Management</h1>
+            <p>Ask questions about expenses, create new entries, or get approvals</p>
+        </div>
+
+        <div class="chat-container" id="chatContainer">
+            <div class="message system">
+                <div class="message-content">
+                    Welcome! I'm your AI assistant for managing expenses. You can ask me to:
+                    <ul style="margin: 10px 0 10px 20px;">
+                        <li>List all expenses</li>
+                        <li>Show pending expenses</li>
+                        <li>Create a new expense</li>
+                        <li>Get expense categories</li>
+                        <li>Show expense summary</li>
+                    </ul>
+                    Try asking: <strong>"Show me all pending expenses"</strong> or <strong>"List all expense categories"</strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="input-container">
+            <div class="input-row">
+                <input type="text" id="userInput" placeholder="Type your message..." autocomplete="off">
+                <button id="sendButton">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const chatContainer = document.getElementById('chatContainer');
+        const userInput = document.getElementById('userInput');
+        const sendButton = document.getElementById('sendButton');
+
+        let genAIAvailable = true; // Will be checked on first message
+
+        // Check if GenAI is available
+        async function checkGenAIAvailability() {
+            try {
+                const response = await fetch('/api/chat/health');
+                if (!response.ok) {
+                    genAIAvailable = false;
+                }
+            } catch (error) {
+                genAIAvailable = false;
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatMessage(text) {
+            // Escape HTML first
+            let formatted = escapeHtml(text);
+            
+            // Convert **text** to <strong>
+            formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            
+            // Convert numbered lists (1. item)
+            const lines = formatted.split('\n');
+            let inOrderedList = false;
+            let inUnorderedList = false;
+            let result = [];
+            
+            for (let line of lines) {
+                const numberedMatch = line.match(/^(\d+)\.\s+(.+)$/);
+                const bulletMatch = line.match(/^[-*]\s+(.+)$/);
+                
+                if (numberedMatch) {
+                    if (!inOrderedList) {
+                        result.push('<ol>');
+                        inOrderedList = true;
+                    }
+                    result.push(`<li>${numberedMatch[2]}</li>`);
+                } else if (bulletMatch) {
+                    if (inOrderedList) {
+                        result.push('</ol>');
+                        inOrderedList = false;
+                    }
+                    if (!inUnorderedList) {
+                        result.push('<ul>');
+                        inUnorderedList = true;
+                    }
+                    result.push(`<li>${bulletMatch[1]}</li>`);
+                } else {
+                    if (inOrderedList) {
+                        result.push('</ol>');
+                        inOrderedList = false;
+                    }
+                    if (inUnorderedList) {
+                        result.push('</ul>');
+                        inUnorderedList = false;
+                    }
+                    if (line.trim()) {
+                        result.push(line + '<br>');
+                    }
+                }
+            }
+            
+            if (inOrderedList) result.push('</ol>');
+            if (inUnorderedList) result.push('</ul>');
+            
+            return result.join('\n');
+        }
+
+        function addMessage(content, type = 'assistant') {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            
+            if (type === 'assistant') {
+                contentDiv.innerHTML = formatMessage(content);
+            } else {
+                contentDiv.textContent = content;
+            }
+            
+            messageDiv.appendChild(contentDiv);
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function showLoading() {
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'message assistant';
+            loadingDiv.id = 'loadingMessage';
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content loading active';
+            contentDiv.textContent = 'Thinking...';
+            
+            loadingDiv.appendChild(contentDiv);
+            chatContainer.appendChild(loadingDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function hideLoading() {
+            const loadingMessage = document.getElementById('loadingMessage');
+            if (loadingMessage) {
+                loadingMessage.remove();
+            }
+        }
+
+        async function sendMessage() {
+            const message = userInput.value.trim();
+            if (!message) return;
+
+            // Disable input while processing
+            userInput.disabled = true;
+            sendButton.disabled = true;
+
+            // Add user message
+            addMessage(message, 'user');
+            userInput.value = '';
+
+            // Check if GenAI is available (first time only)
+            if (genAIAvailable) {
+                try {
+                    const healthCheck = await fetch('/api/chat/health');
+                    if (!healthCheck.ok) {
+                        genAIAvailable = false;
+                    }
+                } catch {
+                    genAIAvailable = false;
+                }
+            }
+
+            // If GenAI is not available, show message
+            if (!genAIAvailable) {
+                addMessage(
+                    "⚠️ **GenAI Services Not Deployed**\n\n" +
+                    "The AI chat functionality requires Azure OpenAI resources which are not currently deployed.\n\n" +
+                    "To enable AI capabilities:\n" +
+                    "1. Run `deploy-with-chat.sh` instead of `deploy.sh`\n" +
+                    "2. This will deploy Azure OpenAI with GPT-4o model\n" +
+                    "3. The chat will then provide intelligent responses and function calling\n\n" +
+                    "In the meantime, you can use the **API Documentation** at /swagger to interact with the expense management system.",
+                    'system'
+                );
+                userInput.disabled = false;
+                sendButton.disabled = false;
+                return;
+            }
+
+            // Show loading indicator
+            showLoading();
+
+            try {
+                // Send message to backend
+                const response = await fetch('/api/chat/message', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ message: message })
+                });
+
+                hideLoading();
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                addMessage(data.response || data.message || 'No response received');
+
+            } catch (error) {
+                hideLoading();
+                console.error('Error:', error);
+                addMessage(
+                    "⚠️ **Error Communicating with AI**\n\n" +
+                    `${error.message}\n\n` +
+                    "Please ensure:\n" +
+                    "- The chat API is properly configured\n" +
+                    "- Azure OpenAI resources are deployed\n" +
+                    "- Managed identity has access to OpenAI",
+                    'system'
+                );
+            }
+
+            // Re-enable input
+            userInput.disabled = false;
+            sendButton.disabled = false;
+            userInput.focus();
+        }
+
+        // Event listeners
+        sendButton.addEventListener('click', sendMessage);
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // Focus input on load
+        userInput.focus();
+    </script>
+</body>
+</html>
