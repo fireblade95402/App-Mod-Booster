@@ -1,0 +1,271 @@
+@page
+@model ExpenseManagement.Pages.ExpensesModel
+@{
+    ViewData["Title"] = "View Expenses";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"]</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .error-bar {
+            background-color: #dc3545;
+            color: white;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .back-link {
+            display: inline-block;
+            color: #667eea;
+            text-decoration: none;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        .filter-section {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            margin-bottom: 20px;
+        }
+
+        .filter-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .filter-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .filter-group select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .filter-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 10px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: opacity 0.3s ease;
+        }
+
+        .filter-btn:hover {
+            opacity: 0.9;
+        }
+
+        .table-container {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 14px;
+        }
+
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-draft {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .status-submitted {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .status-approved {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .status-rejected {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-size: 16px;
+        }
+
+        .amount {
+            font-weight: 600;
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        @if (Model.HasError)
+        {
+            <div class="error-bar">
+                <h3>⚠️ @Model.ErrorMessage</h3>
+                <pre>@Model.ErrorDetails</pre>
+            </div>
+        }
+
+        <div class="header">
+            <a href="/Index" class="back-link">← Back to Home</a>
+            <h1>📋 View Expenses</h1>
+        </div>
+
+        <div class="filter-section">
+            <form method="get">
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label for="FilterUserId">User:</label>
+                        <select id="FilterUserId" name="FilterUserId" asp-for="FilterUserId" asp-items="Model.Users">
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="FilterCategoryId">Category:</label>
+                        <select id="FilterCategoryId" name="FilterCategoryId" asp-for="FilterCategoryId" asp-items="Model.Categories">
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="FilterStatusId">Status:</label>
+                        <select id="FilterStatusId" name="FilterStatusId" asp-for="FilterStatusId" asp-items="Model.Statuses">
+                        </select>
+                    </div>
+                    <div class="filter-group" style="display: flex; align-items: flex-end;">
+                        <button type="submit" class="filter-btn">Apply Filters</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="table-container">
+            @if (Model.Expenses.Any())
+            {
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>User</th>
+                            <th>Category</th>
+                            <th>Amount</th>
+                            <th>Description</th>
+                            <th>Status</th>
+                            <th>Submitted</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var expense in Model.Expenses)
+                        {
+                            <tr>
+                                <td>@expense.ExpenseDate.ToString("dd/MM/yyyy")</td>
+                                <td>@expense.UserName</td>
+                                <td>@expense.CategoryName</td>
+                                <td class="amount">£@expense.AmountGBP.ToString("N2")</td>
+                                <td>@(expense.Description ?? "-")</td>
+                                <td>
+                                    <span class="status-badge status-@expense.StatusName.ToLower()">
+                                        @expense.StatusName
+                                    </span>
+                                </td>
+                                <td>@(expense.SubmittedAt?.ToString("dd/MM/yyyy HH:mm") ?? "-")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <div class="no-data">
+                    <p>No expenses found matching your filters.</p>
+                </div>
+            }
+        </div>
+    </div>
+</body>
+</html>
