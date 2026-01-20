@@ -210,11 +210,12 @@ CREATE OR ALTER PROCEDURE dbo.CreateExpense
     @ReceiptFile NVARCHAR(500) = NULL
 AS
 BEGIN
-    DECLARE @StatusId INT;
-    SELECT @StatusId = StatusId FROM dbo.ExpenseStatus WHERE StatusName = 'Draft';
+    -- Cache status ID lookup (more efficient than repeated subquery)
+    DECLARE @DraftStatusId INT;
+    SELECT @DraftStatusId = StatusId FROM dbo.ExpenseStatus WHERE StatusName = 'Draft';
     
     INSERT INTO dbo.Expenses (UserId, CategoryId, StatusId, AmountMinor, Currency, ExpenseDate, Description, ReceiptFile)
-    VALUES (@UserId, @CategoryId, @StatusId, @AmountMinor, @Currency, @ExpenseDate, @Description, @ReceiptFile);
+    VALUES (@UserId, @CategoryId, @DraftStatusId, @AmountMinor, @Currency, @ExpenseDate, @Description, @ReceiptFile);
     
     SELECT SCOPE_IDENTITY() AS ExpenseId;
 END
@@ -225,11 +226,12 @@ CREATE OR ALTER PROCEDURE dbo.SubmitExpense
     @ExpenseId INT
 AS
 BEGIN
-    DECLARE @StatusId INT;
-    SELECT @StatusId = StatusId FROM dbo.ExpenseStatus WHERE StatusName = 'Submitted';
+    -- Cache status ID lookup
+    DECLARE @SubmittedStatusId INT;
+    SELECT @SubmittedStatusId = StatusId FROM dbo.ExpenseStatus WHERE StatusName = 'Submitted';
     
     UPDATE dbo.Expenses
-    SET StatusId = @StatusId,
+    SET StatusId = @SubmittedStatusId,
         SubmittedAt = SYSUTCDATETIME()
     WHERE ExpenseId = @ExpenseId;
 END
@@ -241,11 +243,12 @@ CREATE OR ALTER PROCEDURE dbo.ApproveExpense
     @ReviewedBy INT
 AS
 BEGIN
-    DECLARE @StatusId INT;
-    SELECT @StatusId = StatusId FROM dbo.ExpenseStatus WHERE StatusName = 'Approved';
+    -- Cache status ID lookup
+    DECLARE @ApprovedStatusId INT;
+    SELECT @ApprovedStatusId = StatusId FROM dbo.ExpenseStatus WHERE StatusName = 'Approved';
     
     UPDATE dbo.Expenses
-    SET StatusId = @StatusId,
+    SET StatusId = @ApprovedStatusId,
         ReviewedBy = @ReviewedBy,
         ReviewedAt = SYSUTCDATETIME()
     WHERE ExpenseId = @ExpenseId;
@@ -258,11 +261,12 @@ CREATE OR ALTER PROCEDURE dbo.RejectExpense
     @ReviewedBy INT
 AS
 BEGIN
-    DECLARE @StatusId INT;
-    SELECT @StatusId = StatusId FROM dbo.ExpenseStatus WHERE StatusName = 'Rejected';
+    -- Cache status ID lookup
+    DECLARE @RejectedStatusId INT;
+    SELECT @RejectedStatusId = StatusId FROM dbo.ExpenseStatus WHERE StatusName = 'Rejected';
     
     UPDATE dbo.Expenses
-    SET StatusId = @StatusId,
+    SET StatusId = @RejectedStatusId,
         ReviewedBy = @ReviewedBy,
         ReviewedAt = SYSUTCDATETIME()
     WHERE ExpenseId = @ExpenseId;
@@ -280,6 +284,9 @@ CREATE OR ALTER PROCEDURE dbo.UpdateExpense
     @ReceiptFile NVARCHAR(500) = NULL
 AS
 BEGIN
+    DECLARE @DraftStatusId INT;
+    SELECT @DraftStatusId = StatusId FROM dbo.ExpenseStatus WHERE StatusName = 'Draft';
+    
     UPDATE dbo.Expenses
     SET CategoryId = @CategoryId,
         AmountMinor = @AmountMinor,
@@ -288,7 +295,10 @@ BEGIN
         Description = @Description,
         ReceiptFile = @ReceiptFile
     WHERE ExpenseId = @ExpenseId
-      AND StatusId = (SELECT StatusId FROM dbo.ExpenseStatus WHERE StatusName = 'Draft');
+      AND StatusId = @DraftStatusId;
+    
+    -- Return number of rows affected (0 = not updated, 1 = updated)
+    SELECT @@ROWCOUNT AS RowsAffected;
 END
 GO
 
@@ -297,9 +307,15 @@ CREATE OR ALTER PROCEDURE dbo.DeleteExpense
     @ExpenseId INT
 AS
 BEGIN
+    DECLARE @DraftStatusId INT;
+    SELECT @DraftStatusId = StatusId FROM dbo.ExpenseStatus WHERE StatusName = 'Draft';
+    
     DELETE FROM dbo.Expenses
     WHERE ExpenseId = @ExpenseId
-      AND StatusId = (SELECT StatusId FROM dbo.ExpenseStatus WHERE StatusName = 'Draft');
+      AND StatusId = @DraftStatusId;
+    
+    -- Return number of rows affected (0 = not deleted, 1 = deleted)
+    SELECT @@ROWCOUNT AS RowsAffected;
 END
 GO
 
