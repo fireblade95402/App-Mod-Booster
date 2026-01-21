@@ -1,0 +1,135 @@
+@page
+@model ExpenseManagement.Pages.Expenses.ApproveExpensesModel
+@{
+    ViewData["Title"] = "Approve Expenses";
+}
+
+<div class="expenses-container">
+    <div class="header-section">
+        <div class="header-content">
+            <h1>Approve Expenses</h1>
+            <p class="subtitle">Review and approve pending expense requests</p>
+        </div>
+        <a asp-page="Index" class="btn-secondary">← Back to All Expenses</a>
+    </div>
+
+    @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+    {
+        <div class="alert alert-success">
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>@Model.SuccessMessage</span>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-error">
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>@Model.ErrorMessage</span>
+        </div>
+    }
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon orange">
+                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <div class="stat-content">
+                <p class="stat-label">Pending Approval</p>
+                <p class="stat-value">@Model.PendingExpenses.Count</p>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon blue">
+                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <div class="stat-content">
+                <p class="stat-label">Total Amount</p>
+                <p class="stat-value">$@Model.PendingExpenses.Sum(e => e.Amount).ToString("N2")</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="expenses-table-container">
+        @if (Model.PendingExpenses.Any())
+        {
+            <table class="expenses-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Employee</th>
+                        <th>Description</th>
+                        <th>Category</th>
+                        <th>Amount</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var expense in Model.PendingExpenses)
+                    {
+                        <tr>
+                            <td>@expense.ExpenseDate.ToString("MMM dd, yyyy")</td>
+                            <td>
+                                <div class="user-info">
+                                    <strong>@expense.UserName</strong>
+                                    <small>Submitted: @expense.SubmittedDate?.ToString("MMM dd")</small>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="expense-description">
+                                    <strong>@expense.Description</strong>
+                                    @if (!string.IsNullOrEmpty(expense.Receipt))
+                                    {
+                                        <small>@expense.Receipt</small>
+                                    }
+                                </div>
+                            </td>
+                            <td>
+                                <span class="category-badge">@expense.CategoryName</span>
+                            </td>
+                            <td class="amount">$@expense.Amount.ToString("N2")</td>
+                            <td>
+                                <div class="action-buttons">
+                                    <form method="post" style="display: inline;">
+                                        <input type="hidden" name="expenseId" value="@expense.ExpenseId" />
+                                        <button type="submit" name="action" value="approve" class="btn-approve" title="Approve">
+                                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                            </svg>
+                                            Approve
+                                        </button>
+                                        <button type="submit" name="action" value="reject" class="btn-reject" title="Reject">
+                                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                            Reject
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div class="empty-state">
+                <svg width="64" height="64" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <h3>No pending expenses</h3>
+                <p>All expenses have been reviewed</p>
+            </div>
+        }
+    </div>
+</div>

@@ -1,0 +1,38 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Expense Management</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <div class="nav-container">
+                <div class="nav-brand">
+                    <svg width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                    <span>Expense Manager</span>
+                </div>
+                <ul class="nav-menu">
+                    <li><a asp-page="/Expenses/Index" class="nav-link">Expenses</a></li>
+                    <li><a asp-page="/Expenses/AddExpense" class="nav-link">Add Expense</a></li>
+                    <li><a asp-page="/Expenses/ApproveExpenses" class="nav-link">Approvals</a></li>
+                    <li><a href="/swagger" class="nav-link">API</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+    <main class="main-content">
+        @RenderBody()
+    </main>
+    <footer class="footer">
+        <div class="footer-content">
+            <p>&copy; 2024 Expense Management System</p>
+        </div>
+    </footer>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,28 @@
+# .NET artifacts
+bin/
+obj/
+publish/
+*.user
+*.suo
+*.userprefs
+.DS_Store
+
+# Build artifacts
+*.dll
+*.exe
+*.pdb
+
+# NuGet
+*.nupkg
+packages/
+
+# IDE
+.vs/
+.vscode/
+.idea/
+
+# App specific
+appsettings.Development.json
+
+# Keep app.zip for deployment
+!app.zip
