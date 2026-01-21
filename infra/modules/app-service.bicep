@@ -8,6 +8,9 @@ param appServiceName string
 @description('Managed Identity resource ID')
 param managedIdentityId string
 
+@description('Managed Identity principal ID')
+param managedIdentityPrincipalId string
+
 // App Service Plan
 resource appServicePlan 'Microsoft.Web/serverfarms@2022-03-01' = {
   name: 'plan-${appServiceName}'
@@ -48,4 +51,4 @@ resource appService 'Microsoft.Web/sites@2022-03-01' = {
 
 output appServiceName string = appService.name
 output appServiceUrl string = 'https://${appService.properties.defaultHostName}'
-output appServicePrincipalId string = appService.identity.principalId
+output appServicePrincipalId string = managedIdentityPrincipalId

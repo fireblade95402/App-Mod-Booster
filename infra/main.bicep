@@ -35,6 +35,7 @@ module appService 'modules/app-service.bicep' = {
     location: location
     appServiceName: appServiceName
     managedIdentityId: managedIdentity.outputs.managedIdentityId
+    managedIdentityPrincipalId: managedIdentity.outputs.managedIdentityPrincipalId
   }
 }
 

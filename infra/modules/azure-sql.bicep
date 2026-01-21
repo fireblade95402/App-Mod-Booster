@@ -14,33 +14,26 @@ param adminObjectId string
 @description('Managed Identity Principal ID')
 param managedIdentityPrincipalId string
 
-// SQL Server
-resource sqlServer 'Microsoft.Sql/servers@2021-11-01' = {
+// SQL Server with Azure AD-only authentication
+resource sqlServer 'Microsoft.Sql/servers@2023-05-01-preview' = {
   name: sqlServerName
   location: location
   properties: {
-    administratorLogin: 'sqladmin' // Required but not used due to AD-only auth
-    administratorLoginPassword: 'P@ssw0rd123!' // Required but not used due to AD-only auth
     minimalTlsVersion: '1.2'
     publicNetworkAccess: 'Enabled'
-  }
-}
-
-// Azure AD Administrator
-resource sqlServerAADAdmin 'Microsoft.Sql/servers/administrators@2021-11-01' = {
-  parent: sqlServer
-  name: 'ActiveDirectory'
-  properties: {
-    administratorType: 'ActiveDirectory'
-    login: adminLogin
-    sid: adminObjectId
-    tenantId: subscription().tenantId
-    azureADOnlyAuthentication: true
+    administrators: {
+      administratorType: 'ActiveDirectory'
+      principalType: 'User'
+      login: adminLogin
+      sid: adminObjectId
+      tenantId: subscription().tenantId
+      azureADOnlyAuthentication: true
+    }
   }
 }
 
 // Database
-resource database 'Microsoft.Sql/servers/databases@2021-11-01' = {
+resource database 'Microsoft.Sql/servers/databases@2023-05-01-preview' = {
   parent: sqlServer
   name: 'Northwind'
   location: location
@@ -56,7 +49,7 @@ resource database 'Microsoft.Sql/servers/databases@2021-11-01' = {
 }
 
 // Firewall rule to allow Azure services
-resource firewallRuleAzure 'Microsoft.Sql/servers/firewallRules@2021-11-01' = {
+resource firewallRuleAzure 'Microsoft.Sql/servers/firewallRules@2023-05-01-preview' = {
   parent: sqlServer
   name: 'AllowAllAzureIPs'
   properties: {

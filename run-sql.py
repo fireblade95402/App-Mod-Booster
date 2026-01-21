@@ -7,7 +7,7 @@ import struct
 from azure.identity import AzureCliCredential
 
 # Database connection settings
-SERVER = "sql-expensemgmt-placeholder.database.windows.net"
+SERVER = "sql-expensemgmt-alqx7owaivpb2.database.windows.net"
 DATABASE = "Northwind"
 SQL_SCRIPT_FILE = "Database-Schema/database_schema.sql"
 
