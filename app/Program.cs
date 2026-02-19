@@ -16,6 +16,7 @@ builder.Services.AddSwaggerGen(c =>
 // Register application services
 builder.Services.AddScoped<DatabaseService>();
 builder.Services.AddScoped<ErrorHandlingService>();
+builder.Services.AddScoped<ChatService>();
 
 var app = builder.Build();
 
