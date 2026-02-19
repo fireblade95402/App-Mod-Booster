@@ -1,0 +1,212 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Expense Management";
+}
+
+<div class="container-fluid">
+    <!-- Error Banner -->
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <strong>Error:</strong> @Model.ErrorMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="display-4 mb-3">Expense Management System</h1>
+            <p class="lead text-muted">Track and manage your expenses efficiently</p>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title text-muted mb-2">Total Expenses</h5>
+                    <h2 class="mb-0">@Model.Expenses.Count</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title text-muted mb-2">Submitted</h5>
+                    <h2 class="mb-0 text-warning">@Model.Expenses.Count(e => e.StatusName == "Submitted")</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title text-muted mb-2">Approved</h5>
+                    <h2 class="mb-0 text-success">@Model.Expenses.Count(e => e.StatusName == "Approved")</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title text-muted mb-2">Total Amount</h5>
+                    <h2 class="mb-0">£@Model.Expenses.Sum(e => e.AmountGBP).ToString("N2")</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom-0 py-3">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h5 class="mb-0">Expenses</h5>
+                        </div>
+                        <div class="col-auto">
+                            <select class="form-select form-select-sm" id="statusFilter" onchange="filterExpenses()">
+                                <option value="">All Statuses</option>
+                                <option value="Draft">Draft</option>
+                                <option value="Submitted">Submitted</option>
+                                <option value="Approved">Approved</option>
+                                <option value="Rejected">Rejected</option>
+                            </select>
+                        </div>
+                        <div class="col-auto">
+                            <a href="/swagger" class="btn btn-sm btn-outline-primary">API Docs</a>
+                            <a href="/Chat" class="btn btn-sm btn-primary">Chat Assistant</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>User</th>
+                                    <th>Category</th>
+                                    <th>Amount</th>
+                                    <th>Date</th>
+                                    <th>Description</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var expense in Model.Expenses)
+                                {
+                                    <tr data-status="@expense.StatusName">
+                                        <td>@expense.ExpenseId</td>
+                                        <td>
+                                            <div>@expense.UserName</div>
+                                            <small class="text-muted">@expense.UserEmail</small>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-secondary">@expense.CategoryName</span>
+                                        </td>
+                                        <td class="fw-bold">£@expense.AmountGBP.ToString("N2")</td>
+                                        <td>@expense.ExpenseDate.ToString("dd MMM yyyy")</td>
+                                        <td>
+                                            <small>@(expense.Description ?? "-")</small>
+                                        </td>
+                                        <td>
+                                            @if (expense.StatusName == "Draft")
+                                            {
+                                                <span class="badge bg-secondary">@expense.StatusName</span>
+                                            }
+                                            else if (expense.StatusName == "Submitted")
+                                            {
+                                                <span class="badge bg-warning text-dark">@expense.StatusName</span>
+                                            }
+                                            else if (expense.StatusName == "Approved")
+                                            {
+                                                <span class="badge bg-success">@expense.StatusName</span>
+                                            }
+                                            else if (expense.StatusName == "Rejected")
+                                            {
+                                                <span class="badge bg-danger">@expense.StatusName</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm" role="group">
+                                                <button type="button" class="btn btn-outline-primary btn-sm">View</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom-0 py-3">
+                    <h5 class="mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-primary" onclick="alert('Create expense functionality - Use API: POST /api/expenses')">
+                            <i class="bi bi-plus-circle"></i> Create New Expense
+                        </button>
+                        <button class="btn btn-outline-primary" onclick="window.location.href='/api/expenses?status=Submitted'">
+                            <i class="bi bi-clock"></i> View Pending Approvals
+                        </button>
+                        <button class="btn btn-outline-primary" onclick="window.location.href='/swagger'">
+                            <i class="bi bi-code-square"></i> View API Documentation
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom-0 py-3">
+                    <h5 class="mb-0">Categories</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex flex-wrap gap-2">
+                        @foreach (var category in Model.Categories)
+                        {
+                            <span class="badge bg-secondary fs-6 py-2 px-3">@category.CategoryName</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    body {
+        background-color: #f8f9fa;
+    }
+    .card {
+        transition: transform 0.2s;
+    }
+    .card:hover {
+        transform: translateY(-2px);
+    }
+</style>
+
+<script>
+    function filterExpenses() {
+        const filter = document.getElementById('statusFilter').value;
+        const rows = document.querySelectorAll('tbody tr');
+        
+        rows.forEach(row => {
+            const status = row.getAttribute('data-status');
+            if (filter === '' || status === filter) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+</script>
